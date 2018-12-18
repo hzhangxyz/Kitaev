@@ -2,7 +2,7 @@
 
 import numpy as np
 
-def get_matrix(n1,n2,Jx=1,Jy=1,Jz=1):
+def get_matrix(n1,n2,Jx=4,Jy=1,Jz=1):
     matrix = np.zeros([n1*n2,n1*n2])
 
     """

@@ -55,8 +55,13 @@ pauli = pauli_x+pauli_y+pauli_z
 
 def square():
     import sys
-    n1 = int(sys.argv[1])
-    n2 = int(sys.argv[2])
+    if len(sys.argv)==2:
+        l = int(sys.argv[1])
+        n1 = 2*l
+        n2 = 1
+    else:
+        n1 = int(sys.argv[1])
+        n2 = int(sys.argv[2])
     np.set_printoptions(precision=2)
     np.set_printoptions(suppress=True)
 
@@ -68,12 +73,32 @@ def square():
         for j in range(n2-1):
             lattice.set_bond(i*n2+j,i*n2+j+1,pauli)
     import os
-    while True:
+    for i in range(100):
         lattice.update()
         ene = (1-lattice.energy)/(n1*n2)
         print(ene)
         np.save(f"data-{n1}-{n2}.temp.npy", lattice.state_vector)
         os.rename(f"./data-{n1}-{n2}.temp.npy",f"./data-{n1}-{n2}.npy")
+    np.set_printoptions(suppress=True, linewidth=1000)
+    np.set_printoptions(threshold=np.nan)
+    state = lattice.state_vector.reshape([2**(n1*n2//2),2**(n1*n2//2)])
+    print(state)
+    if len(sys.argv)!=2:
+        exit()
+    num = np.array([0])
+    for i in range(l):
+        num = np.concatenate([num,num+1])
+    print(num)
+    total = []
+    for i in range(l+1):
+        index = np.where(num==i)[0]
+        sub = state[index].T[2**l-1-index].T
+        ss = np.linalg.svd(sub)[1]
+        total += list(map(lambda x:(i,x), ss))
+    total.sort(key=lambda x:-x[1])
+    print("##")
+    for i in total:
+        print(i)
 
 square()
 
