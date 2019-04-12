@@ -29,6 +29,29 @@ class Lattice():
             before_transpose = np.tensordot(self.state_vector, i.matrix, [[i.n1,i.n2],[0,1]])
             state_vector_tmp += np.transpose(before_transpose,order)
         self.state_vector -= state_vector_tmp
+    def correlation(self, i, j, im, jm):
+        #print(self.state_vector.reshape([-1]))
+        order1 = list(range(self.node_num-1))
+        order1.insert(i, self.node_num-1)
+        tmp1 = np.tensordot(self.state_vector, im, [[i], [0]])
+        tmp1t = np.transpose(tmp1, order1)
+        #print(tmp1t.reshape([-1]))
+        order2 = list(range(self.node_num-1))
+        order2.insert(j, self.node_num-1)
+        tmp2 = np.tensordot(tmp1t, jm, [[j], [0]])
+        tmp2t = np.transpose(tmp2, order2)
+        #print(tmp2t.reshape([-1]))
+        res = np.dot(tmp2t.reshape([-1]), self.state_vector.reshape([-1]))
+        over = np.dot(self.state_vector.reshape([-1]), self.state_vector.reshape([-1]))
+        return res/over
+
+S_x = np.reshape([
+        0,1,
+        1,0], [2,2])/2.
+
+S_z = np.reshape([
+        1,0,
+        0,-1], [2,2])/2.
 
 pauli_z = np.reshape([
         1,0,0,0,
@@ -67,10 +90,13 @@ def square():
     for i in range(n1):
         for j in range(n2-1):
             lattice.set_bond(i*n2+j,i*n2+j+1,pauli)
+    for i in range(n1-1):
+        for j in range(n2-1):
+            lattice.set_bond(i*n2+j,(i+1)*n2+j+1,pauli)
     while True:
         lattice.update()
         ene = (1-lattice.energy)/(n1*n2)
-        print(ene)
+        print(ene, lattice.correlation(int(sys.argv[3]),int(sys.argv[4]),S_x,S_x))
 
 def kitaev(Jx=1, Jy=1, Jz=1, H=0):
     import sys
@@ -114,7 +140,5 @@ def kitaev(Jx=1, Jy=1, Jz=1, H=0):
         np.save(f"data-{n1}-{n2}.temp.npy",lattice.state_vector)
         os.rename(f"./data-{n1}-{n2}.temp.npy",f"./data-{n1}-{n2}.npy")
 
-#square()
-
-kitaev(1,0,1,1)
+square()
 

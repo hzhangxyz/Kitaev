@@ -26,4 +26,6 @@ def get_matrix(n1,n2,Jx=4,Jy=1,Jz=1):
     print(np.mean(np.abs(np.linalg.eig(matrix)[0]))/8)
 
 import sys
-get_matrix(int(sys.argv[1]),int(sys.argv[2]))
+get_matrix(int(sys.argv[1]),int(sys.argv[2]),float(sys.argv[3]),float(sys.argv[4]),float(sys.argv[5]))
+
+

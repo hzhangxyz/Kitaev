@@ -29,6 +29,18 @@ class Lattice():
             before_transpose = np.tensordot(self.state_vector, i.matrix, [[i.n1,i.n2],[0,1]])
             state_vector_tmp += np.transpose(before_transpose,order)
         self.state_vector -= state_vector_tmp
+        threshold = np.flip(np.sort(self.state_vector.reshape([-1])))[1]
+        fake_state = self.state_vector * (np.abs(self.state_vector) > threshold)
+        fake_state = fake_state / np.max(np.abs(fake_state))
+        state_vector_tmp = np.zeros([2 for i in range(self.node_num)])
+        for i in self.bonds:
+            order = list(range(self.node_num-2))
+            order.insert(i.n1, self.node_num-2)
+            order.insert(i.n2, self.node_num-1)
+            before_transpose = np.tensordot(fake_state, i.matrix, [[i.n1,i.n2],[0,1]])
+            state_vector_tmp += np.transpose(before_transpose,order)
+        self.fake_energy = np.dot(fake_state.reshape([-1]),state_vector_tmp.reshape([-1]))/np.dot(fake_state.reshape([-1]),fake_state.reshape([-1]))
+
 
 pauli_z = np.reshape([
         1,0,0,0,
@@ -51,7 +63,9 @@ pauli_y = np.reshape([
         -1,0,0,0
         ], [4,4])/4.
 
-pauli = pauli_x+pauli_y+pauli_z
+import sys
+
+pauli = pauli_x*1+pauli_y*1+pauli_z*1
 
 def square():
     import sys
@@ -76,7 +90,7 @@ def square():
     for i in range(100):
         lattice.update()
         ene = (1-lattice.energy)/(n1*n2)
-        print(ene)
+        print(ene, lattice.fake_energy/(n1*n2))
         np.save(f"data-{n1}-{n2}.temp.npy", lattice.state_vector)
         os.rename(f"./data-{n1}-{n2}.temp.npy",f"./data-{n1}-{n2}.npy")
     np.set_printoptions(suppress=True, linewidth=1000)
